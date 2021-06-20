@@ -3,9 +3,9 @@ require "../helper/error_helper"
 require "./scanner_error"
 
 module CrLox
-  extend CrLox::Helper
-
   class Scanner
+    include CrLox::Helper
+
     def initialize(@source : String)
       @tokens = Array(Token).new
       @start = 0
@@ -15,13 +15,12 @@ module CrLox
       @had_error = false
     end
 
-    def scan_tokens
+    def scan_tokens : Array(Token)
       while !is_at_end
         @start = @current
         scan_token
       end
       @tokens.push Token.new(TokenType::EOF, "", nil, @line)
-      @tokens
     end
 
     def is_at_end : Bool
@@ -30,32 +29,22 @@ module CrLox
 
     def scan_token
       current_char : Char = advance()
+
       case current_char
-      when '('
-        add_token(TokenType::LEFT_PAREN)
-      when ')'
-        add_token(TokenType::RIGHT_PAREN)
-      when '{'
-        add_token(TokenType::LEFT_BRACE)
-      when '}'
-        add_token(TokenType::RIGHT_BRACE)
-      when ','
-        add_token(TokenType::COMMA)
-      when '.'
-        add_token(TokenType::DOT)
-      when '-'
-        add_token(TokenType::MINUS)
-      when '+'
-        add_token(TokenType::PLUS)
-      when ';'
-        add_token(TokenType::SEMICOLON)
-      when '*'
-        add_token(TokenType::STAR)
-      when '\n'
-        @line += 1
+      when '(' ; add_token(TokenType::LEFT_PAREN)
+      when ')' ; add_token(TokenType::RIGHT_PAREN)
+      when '{' ; add_token(TokenType::LEFT_BRACE)
+      when '}' ; add_token(TokenType::RIGHT_BRACE)
+      when ',' ; add_token(TokenType::COMMA)
+      when '.' ; add_token(TokenType::DOT)
+      when '-' ; add_token(TokenType::MINUS)
+      when '+' ; add_token(TokenType::PLUS)
+      when ';' ; add_token(TokenType::SEMICOLON)
+      when '*' ; add_token(TokenType::STAR)
+      when '\n'; @line += 1
       when ' ', '\r', '\t'
       else
-        @errors.push Helper.error(@line, "Unexpected Character: #{current_char}")
+        @errors.push error(@line, "Unexpected Character: #{current_char}")
         @had_error = true
       end
     end

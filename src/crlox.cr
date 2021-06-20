@@ -5,13 +5,14 @@ require "./crlox_interactive/crlox_interactive"
 
 module CrLox::Main
   extend CrLox::Helper
+  extend CrLox::Interactive
 
   begin
-    path = Helper.get_path
+    path = get_path
     if path != ""
-      Helper.run_file(path)
+      run_file(path)
     else
-      Interactive.run_prompt
+      run_prompt
     end
   rescue ex
     STDERR.puts ex.message
