@@ -1,17 +1,21 @@
 require "../token/token"
 require "../helper/error_helper"
+require "./scanner_error"
 
-module CrLox 
+module CrLox
   extend CrLox::Helper
-  class Scanner 
+
+  class Scanner
     def initialize(@source : String)
       @tokens = Array(Token).new
       @start = 0
       @current = 0
       @line = 1
+      @errors = Array(String).new
+      @had_error = false
     end
 
-    def scan_tokens 
+    def scan_tokens
       while !is_at_end
         @start = @current
         scan_token
@@ -24,14 +28,14 @@ module CrLox
       @current >= @source.size
     end
 
-    def scan_token 
+    def scan_token
       current_char : Char = advance()
       case current_char
-      when '(' 
+      when '('
         add_token(TokenType::LEFT_PAREN)
       when ')'
         add_token(TokenType::RIGHT_PAREN)
-      when '{' 
+      when '{'
         add_token(TokenType::LEFT_BRACE)
       when '}'
         add_token(TokenType::RIGHT_BRACE)
@@ -47,24 +51,36 @@ module CrLox
         add_token(TokenType::SEMICOLON)
       when '*'
         add_token(TokenType::STAR)
-      else 
-        Helper.error(@line, "Unexpected Character")
-      end 
+      when '\n'
+        @line += 1
+      when ' ', '\r', '\t'
+      else
+        @errors.push Helper.error(@line, "Unexpected Character: #{current_char}")
+        @had_error = true
+      end
     end
 
     def advance : Char
-      old_current = @current
+      char = @current
       @current += 1
-      @source.char_at(old_current)
+      @source.char_at(char)
     end
 
     def add_token(type : TokenType)
       add_token(type, nil)
     end
 
-    def add_token(type : TokenType, literal : Literal | Nil) 
+    def add_token(type : TokenType, literal : Literal | Nil)
       text : String = @source[@start...@current]
       @tokens.push(Token.new(type, text, literal, @line))
+    end
+
+    def had_error
+      @had_error
+    end
+
+    def scanner_errors
+      @errors
     end
   end
 end
