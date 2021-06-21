@@ -1,30 +1,14 @@
 require "../token/token"
 require "../helper/error_helper"
-require "./scanner_error"
+require "./scanner_keywords"
 require "../helper/char_helper"
 
 module CrLox
   class Scanner
     include CrLox::Helper
+    extend CrLox
 
-    @@keywords = {
-      and:    TokenType::AND,
-      class:  TokenType::CLASS,
-      else:   TokenType::ELSE,
-      false:  TokenType::FALSE,
-      for:    TokenType::FOR,
-      fun:    TokenType::FUN,
-      if:     TokenType::IF,
-      nil:    TokenType::NIL,
-      or:     TokenType::OR,
-      print:  TokenType::PRINT,
-      return: TokenType::RETURN,
-      super:  TokenType::SUPER,
-      this:   TokenType::THIS,
-      true:   TokenType::TRUE,
-      var:    TokenType::VAR,
-      while:  TokenType::WHILE,
-    }
+    @@keywords : Hash(String, TokenType) = get_keywords
 
     def initialize(@source : String)
       @tokens = Array(Token).new
@@ -36,14 +20,14 @@ module CrLox
     end
 
     def scan_tokens : Array(Token)
-      while !is_at_end
+      while !at_end?
         @start = @current
         scan_token
       end
       @tokens.push Token.new(TokenType::EOF, "", nil, @line)
     end
 
-    def is_at_end : Bool
+    def at_end? : Bool
       @current >= @source.size
     end
 
@@ -87,7 +71,7 @@ module CrLox
     end
 
     def peek : Char
-      return is_at_end ? '\0' : @source.char_at(@current)
+      return at_end? ? '\0' : @source.char_at(@current)
     end
 
     def peek_next
@@ -95,6 +79,12 @@ module CrLox
         return '\0'
       end
       @source.char_at @current + 1
+    end
+
+    def match?(expected : Char) : Bool
+      return false if at_end? || (@source.char_at(@current) != expected)
+      @current += 1
+      return true
     end
 
     def add_token(type : TokenType)
@@ -106,28 +96,37 @@ module CrLox
       @tokens.push(Token.new(type, text, literal, @line))
     end
 
-    def match?(expected : Char) : Bool
-      return false if is_at_end || (@source.char_at(@current) != expected)
-      @current += 1
-      return true
-    end
-
     def slash
       if match?('/')
-        while peek != '\n' && !is_at_end
+        while peek != '\n' && !at_end?
           advance
         end
+      elsif match?('*')
+        parse_comment_block
       else
         add_token(TokenType::SLASH)
       end
     end
 
+    def parse_comment_block
+      while !at_end? && !end_of_comment?
+        if match?('/') && match?('*')
+          parse_comment_block
+        end
+        @line += 1 if peek = '\n'
+      end
+    end
+
+    def end_of_comment? : Bool
+      advance == '*' && match?('/')
+    end
+
     def string
-      while peek != '"' && !is_at_end
+      while peek != '"' && !at_end?
         @line += 1 if peek == '\n'
         advance
       end
-      if is_at_end
+      if at_end?
         log_error "Unterminated string."
         return
       end
@@ -139,14 +138,10 @@ module CrLox
     end
 
     def number
-      while digit?(peek)
-        advance
-      end
+      get_digits(peek)
       if peek == '.' && digit?(peek_next)
         advance
-        while digit?(peek)
-          advance
-        end
+        get_digits(peek)
       end
       add_token(TokenType::NUMBER, @source[@start...@current].to_f)
     end
@@ -161,6 +156,12 @@ module CrLox
       add_token(type)
     end
 
+    def get_digits(char : Char)
+      while digit?(char)
+        advance
+      end
+    end
+
     def log_error(message : String)
       @errors.push error(@line, message)
       @had_error = true
@@ -170,7 +171,7 @@ module CrLox
       @had_error
     end
 
-    def scanner_errors
+    def errors
       @errors
     end
   end

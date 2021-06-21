@@ -18,7 +18,7 @@ module CrLox::Helper
 
   def check_scanner_errors(scanner : Scanner, has_error : Bool)
     if has_error
-      errors = scanner.scanner_errors
+      errors = scanner.errors
       errors.each do |error|
         puts error
       end

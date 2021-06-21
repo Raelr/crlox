@@ -4,6 +4,6 @@ module CrLox::Helper
   end
 
   def report(line : Int32, where : String, message : String) : String
-    "Error: #{message}\n\tFound in #{where}, line: #{line}"
+    "Error: #{message}\n       Found in #{where}, line: #{line}"
   end
 end
