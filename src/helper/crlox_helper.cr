@@ -22,7 +22,7 @@ module CrLox::Helper
       errors.each do |error|
         puts error
       end
-      raise(UnRecognisedTokenException.new)
+      raise(ScannerException.new)
     end
   end
 end

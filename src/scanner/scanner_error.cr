@@ -1,4 +1,4 @@
 module CrLox
-  class UnRecognisedTokenException < Exception
+  class ScannerException < Exception
   end
 end

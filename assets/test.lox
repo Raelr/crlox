@@ -2,3 +2,6 @@ var language = "lox";
 var a = 1;
 var b = 2;
 var c = a + b;
+// This is a comment
+var isGreater = a >= b
+var division = a / b
