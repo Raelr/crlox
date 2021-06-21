@@ -1,3 +1,5 @@
+[![Crystal CI](https://github.com/Raelr/crlox/actions/workflows/crystal.yml/badge.svg)](https://github.com/Raelr/crlox/actions/workflows/crystal.yml)
+
 # crlox
 
 An implementation of the `lox` interpreter in `crystal`. 
