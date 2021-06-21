@@ -10,7 +10,7 @@ module CrLox::Main
   begin
     path = get_path
     if path != ""
-      run_file(path)
+      run_from_file(path)
     else
       run_prompt
     end

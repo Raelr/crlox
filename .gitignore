@@ -1,1 +1,4 @@
 shard.lock
+build 
+lib
+.DS_Store

@@ -5,6 +5,6 @@ include CrLox::Helper
 describe CrLox::Helper do
   describe "throw an error and format it correctly" do
     err = error(0, "This is a test error")
-    err.should eq "Error: This is a test error\n\tFound in , line: 0"
+    err.should eq "Error: This is a test error\n       Found in , line: 0"
   end
 end

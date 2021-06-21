@@ -10,7 +10,8 @@ module CrLox
 
     @@keywords : Hash(String, TokenType) = get_keywords
 
-    def initialize(@source : String)
+    def initialize
+      @source = ""
       @tokens = Array(Token).new
       @start = 0
       @current = 0
@@ -19,7 +20,9 @@ module CrLox
       @had_error = false
     end
 
-    def scan_tokens : Array(Token)
+    def scan_tokens(source : String) : Array(Token)
+      initialize
+      @source = source
       while !at_end?
         @start = @current
         scan_token
@@ -51,16 +54,9 @@ module CrLox
       when '='; add_token(match?('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL)
       when '<'; add_token(match?('=') ? TokenType::LESS_EQUAL : TokenType::LESS)
       when '>'; add_token(match?('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER)
-      when '/'; slash
-      when '"'; string
-      else
-        if digit?(current_char)
-          number
-        elsif alpha?(current_char)
-          identifier
-        else
-          log_error "Unexpected Character: #{current_char}"
-        end
+      when '/'; parse_slash
+      when '"'; parse_string
+      else      parse_digit_or_alpha_chars current_char
       end
     end
 
@@ -96,7 +92,17 @@ module CrLox
       @tokens.push(Token.new(type, text, literal, @line))
     end
 
-    def slash
+    def parse_digit_or_alpha_chars(char : Char)
+      if digit?(char)
+        parse_number
+      elsif alpha?(char)
+        parse_identifier
+      else
+        log_error "Unexpected Character: #{char}"
+      end
+    end
+
+    def parse_slash
       if match?('/')
         while peek != '\n' && !at_end?
           advance
@@ -108,12 +114,13 @@ module CrLox
       end
     end
 
+    # Comment block - any occurrence of '/* or */'
     def parse_comment_block
       while !at_end? && !end_of_comment?
         if match?('/') && match?('*')
           parse_comment_block
         end
-        @line += 1 if peek = '\n'
+        @line += 1 if peek == '\n'
       end
     end
 
@@ -121,7 +128,7 @@ module CrLox
       advance == '*' && match?('/')
     end
 
-    def string
+    def parse_string
       while peek != '"' && !at_end?
         @line += 1 if peek == '\n'
         advance
@@ -137,7 +144,7 @@ module CrLox
       add_token(TokenType::STRING, value)
     end
 
-    def number
+    def parse_number
       get_digits(peek)
       if peek == '.' && digit?(peek_next)
         advance
@@ -146,7 +153,7 @@ module CrLox
       add_token(TokenType::NUMBER, @source[@start...@current].to_f)
     end
 
-    def identifier
+    def parse_identifier
       while alpha_neumeric?(peek)
         advance
       end
