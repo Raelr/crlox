@@ -1,7 +1,9 @@
 require "./expr"
-require "./token/*"
+require "../token/*"
 
 module CrLox
+  extend CrLox
+
   class AstPrinter < Visitor(String)
     include CrLox
 
@@ -20,10 +22,6 @@ module CrLox
     def visit_unary_expr(expr : Unary) : String
       parenthesize(expr.operator.lexeme, [expr.right])
     end
-
-    def print(expression : Expr)
-      expression.accept(self)
-    end
   end
 
   def parenthesize(name : String, expressions : Array(Expr)) : String
@@ -34,7 +32,10 @@ module CrLox
     string += ')'
   end
 
-  printer = AstPrinter.new
+  def get_expanded_expression(expression : Expr) : String
+    printer = AstPrinter.new
+    expression.accept(printer)
+  end
 
   expression = Binary.new(
     Unary.new(
@@ -43,5 +44,5 @@ module CrLox
     Token.new(TokenType::STAR, "*", nil, 1),
     Grouping.new(Literal.new(45.67))
   )
-  puts printer.print(expression)
+  puts get_expanded_expression(expression)
 end
