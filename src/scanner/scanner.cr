@@ -87,7 +87,7 @@ module CrLox
       add_token(type, nil)
     end
 
-    def add_token(type : TokenType, literal : Literal | Nil)
+    def add_token(type : TokenType, literal : LiteralType | Nil)
       text : String = @source[@start...@current]
       @tokens.push(Token.new(type, text, literal, @line))
     end

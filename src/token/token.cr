@@ -1,10 +1,22 @@
 require "./token_type"
 
 module CrLox
-  alias Literal = (String | Char | Float64 | Bool | Nil)
+  alias LiteralType = (String | Char | Float64 | Bool | Nil)
 
   class Token
-    def initialize(@type : TokenType, @lexeme : String, @literal : Literal | Nil, @line : Int32)
+    def initialize(@type : TokenType, @lexeme : String, @literal : LiteralType | Nil, @line : Int32)
+    end
+
+    def line
+      @line
+    end
+
+    def literal
+      @literal
+    end
+
+    def lexeme
+      @lexeme
     end
 
     def type
