@@ -1,4 +1,3 @@
-require "spec"
 require "../../src/helper/parser_helper"
 include CrLox::Helper
 

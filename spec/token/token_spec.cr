@@ -1,3 +1,4 @@
+require "spec"
 require "../../src/token/token"
 
 def init_test_token : CrLox::Token

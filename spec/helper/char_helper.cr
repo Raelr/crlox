@@ -1,4 +1,3 @@
-require "spec"
 require "../../src/helper/char_helper"
 
 include CrLox::Helper

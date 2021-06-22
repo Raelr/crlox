@@ -1,4 +1,3 @@
-require "spec"
 require "../../src/scanner/*"
 require "../../src/token/token_type"
 
