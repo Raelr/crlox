@@ -49,6 +49,7 @@ module CrLox
       when ';' ; add_token(TokenType::SEMICOLON)
       when '*' ; add_token(TokenType::STAR)
       when ':' ; add_token(TokenType::COLON)
+      when '?' ; add_token(TokenType::QUESTION)
       when '\n'; @line += 1
       when ' ', '\r', '\t'
       when '!'; add_token(match?('=') ? TokenType::BANG_EQUAL : TokenType::BANG)

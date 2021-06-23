@@ -25,6 +25,12 @@ module CrLox
       while match?([TokenType::COMMA])
         expr = equality
       end
+      if match?([TokenType::QUESTION])
+        operator = previous
+        next_expr = expression
+        consume(TokenType::COLON, "Expected : for ternary operator")
+        return Binary.new(expr, operator, Binary.new(next_expr, previous, expression))
+      end
       expr
     end
 
