@@ -21,7 +21,11 @@ module CrLox
     end
 
     def expression : Expr
-      equality
+      expr = equality
+      while match?([TokenType::COMMA])
+        expr = equality
+      end
+      expr
     end
 
     def equality : Expr

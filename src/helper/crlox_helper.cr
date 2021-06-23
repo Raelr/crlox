@@ -23,7 +23,6 @@ module CrLox::Helper
     end
     expression = parser.parse_tokens(tokens)
     compiler_output += "\nExpanded Expression:\n\n" + CrLox.get_expanded_expression(expression)
-    compiler_output
   end
 
   def check_scanner_errors(scanner : Scanner, has_error : Bool)

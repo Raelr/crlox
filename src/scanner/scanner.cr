@@ -48,6 +48,7 @@ module CrLox
       when '+' ; add_token(TokenType::PLUS)
       when ';' ; add_token(TokenType::SEMICOLON)
       when '*' ; add_token(TokenType::STAR)
+      when ':' ; add_token(TokenType::COLON)
       when '\n'; @line += 1
       when ' ', '\r', '\t'
       when '!'; add_token(match?('=') ? TokenType::BANG_EQUAL : TokenType::BANG)
@@ -145,10 +146,10 @@ module CrLox
     end
 
     def parse_number
-      get_digits(peek)
+      get_digits
       if peek == '.' && digit?(peek_next)
         advance
-        get_digits(peek)
+        get_digits
       end
       add_token(TokenType::NUMBER, @source[@start...@current].to_f)
     end
@@ -163,8 +164,8 @@ module CrLox
       add_token(type)
     end
 
-    def get_digits(char : Char)
-      while digit?(char)
+    def get_digits
+      while digit?(peek)
         advance
       end
     end
