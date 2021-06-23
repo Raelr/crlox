@@ -3,6 +3,14 @@ module CrLox::Helper
     report(line, "", message)
   end
 
+  def error(token : Token, message : String) : String
+    if token.type == TokenType::EOF
+      report(token.line, " at end", message)
+    else
+      report(token.line, " at '" + token.lexeme + "'", message)
+    end
+  end
+
   def report(line : Int32, where : String, message : String) : String
     "Error: #{message}\n       Found in #{where}, line: #{line}"
   end

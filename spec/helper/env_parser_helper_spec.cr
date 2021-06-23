@@ -1,4 +1,4 @@
-require "../../src/helper/parser_helper"
+require "../../src/helper/env_parser_helper"
 include CrLox::Helper
 
 describe CrLox::Helper do

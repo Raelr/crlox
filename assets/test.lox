@@ -1,11 +1,13 @@
-var language = "lox";
-var a = 1;
-var b = 2;
-var c = a + b;
+//var language = "lox";
+//var a = 1;
+//var b = 2;
+//var c = a + b;
 // This is a comment
 /*
   This is a big *comment
   Look how big/ it is! 
 */
-var isGreater = a >= b
-var division = a / b
+//var isGreater = a >= b
+//var division = a / b
+
+-(1 * 2) + 4 / 5)

@@ -1,21 +1,29 @@
 require "./error_helper"
+require "../parser/parser"
 require "../scanner/scanner"
 require "../scanner/scanner_error"
+require "../tool/expr"
+require "../tool/ast_printer"
 
 module CrLox::Helper
+  extend CrLox
+
   def get_source_from_file(path : String)
     File.read(path)
   end
 
   def run(source : String) : String
     scanner = Scanner.new
-    tokens : Array(Token) = scanner.scan_tokens(source)
+    parser = Parser.new
+    tokens = scanner.scan_tokens(source)
     check_scanner_errors(scanner, scanner.had_error)
-    token_str = ""
+    compiler_output = "Generated tokens:\n\n"
     tokens.each do |token|
-      token_str += token.to_s + '\n'
+      compiler_output += token.to_s + '\n'
     end
-    token_str
+    expression = parser.parse_tokens(tokens)
+    compiler_output += "\nExpanded Expression:\n\n" + CrLox.get_expanded_expression(expression)
+    compiler_output
   end
 
   def check_scanner_errors(scanner : Scanner, has_error : Bool)

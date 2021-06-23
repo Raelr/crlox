@@ -36,13 +36,4 @@ module CrLox
     printer = AstPrinter.new
     expression.accept(printer)
   end
-
-  expression = Binary.new(
-    Unary.new(
-      Token.new(TokenType::MINUS, "-", nil, 1),
-      Literal.new(123)),
-    Token.new(TokenType::STAR, "*", nil, 1),
-    Grouping.new(Literal.new(45.67))
-  )
-  puts get_expanded_expression(expression)
 end

@@ -1,4 +1,4 @@
-require "./helper/parser_helper"
+require "./helper/env_parser_helper"
 require "./helper/crlox_helper"
 
 require "./crlox_interactive/crlox_interactive"
