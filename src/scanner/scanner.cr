@@ -16,7 +16,7 @@ module CrLox
       @start = 0
       @current = 0
       @line = 1
-      @errors = Array(String).new
+      @error_message = ""
       @had_error = false
     end
 
@@ -27,6 +27,7 @@ module CrLox
         @start = @current
         scan_token
       end
+      raise(ScannerException.new(@error_message)) if @had_error
       @tokens.push Token.new(TokenType::EOF, "", nil, @line)
     end
 
@@ -173,7 +174,7 @@ module CrLox
     end
 
     def log_error(message : String)
-      @errors.push error(@line, message)
+      @error_message += "#{error(@line, message)}\n"
       @had_error = true
     end
 
@@ -183,10 +184,6 @@ module CrLox
 
     def had_error
       @had_error
-    end
-
-    def errors
-      @errors
     end
   end
 end

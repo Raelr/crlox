@@ -47,13 +47,13 @@ describe CrLox::Scanner do
     tokens.size.should eq 1
   end
   describe "parse faulty string and return error" do
-    scanner.scan_tokens(src_with_undefined_char)
-    scanner.had_error.should eq true
-    scanner.errors[0].should eq "Error: Unexpected Character: @\n       Found in , line: 1"
+    expect_raises(ScannerException) do
+      scanner.scan_tokens(src_with_undefined_char)
+    end
   end
   describe "parse soure with unclosed string and return error" do
-    scanner.scan_tokens(src_with_unclosed_string)
-    scanner.had_error.should eq true
-    scanner.errors[0].should eq "Error: Unterminated string.\n       Found in , line: 1"
+    expect_raises(ScannerException) do
+      scanner.scan_tokens(src_with_unclosed_string)
+    end
   end
 end
