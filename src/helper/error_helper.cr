@@ -1,3 +1,5 @@
+require "../interpreter/*"
+
 module CrLox::Helper
   def error(line : Int32, message : String) : String
     report(line, "", message)
@@ -9,6 +11,10 @@ module CrLox::Helper
     else
       report(token.line, " at '" + token.lexeme + "'", message)
     end
+  end
+
+  def runtime_error(error : RuntimeException)
+    "#{error.message}\n[line #{error.token.line}]"
   end
 
   def report(line : Int32, where : String, message : String) : String
