@@ -1,10 +1,28 @@
 require "../tool/expr"
 require "../token/*"
+require "../helper/error_helper"
+require "./interpreter_errors.cr"
 
 module CrLox
   extend CrLox
 
   class Interpreter < Visitor(LiteralType)
+    include CrLox::Helper
+
+    def initialize(@had_error : Bool = false, @error_message : String = "")
+    end
+
+    def interpret(expression : Expr) : String
+      begin
+        result = evaluate(expression)
+      rescue ex : RuntimeException
+        @error_message += "#{runtime_error(ex)}"
+      end
+
+      raise(InterpreterException.new(@error_message)) if @had_error
+      stringify(result)
+    end
+
     def visit_binary_expr(expr : Binary) : LiteralType
       left = evaluate(expr.left)
       right = evaluate(expr.right)
@@ -34,25 +52,21 @@ module CrLox
         check_number_operands(expr.operator, left, right)
         return left.as(Float64) * right.as(Float64)
       when TokenType::PLUS
-        if left.class == Float64 && right.class == Float64
+        if left.is_a?(Float64) && right.is_a?(Float64)
           return left.as(Float64) + right.as(Float64)
         end
-        if left.class == String && right.class == String
-          return "#{left} #{right}"
+        if left.is_a?(String) && right.is_a?(String)
+          return "#{left}#{right}"
         end
-        raise(RuntimeException.new(expr.operator, "Operands must be two numbers or two strings."))
+        log_runtime_error(expr.operator, "Operands must be two numbers or two strings.")
       end
 
       nil
     end
 
-    def interpret(expression : Expr)
-      puts stringify(evaluate(expression))
-    end
-
     def stringify(object : LiteralType)
       return "nil" if object == nil
-      if object.class == Float64
+      if object.is_a?(Float64)
         return object.to_s
       end
       object.to_s
@@ -71,24 +85,24 @@ module CrLox
 
       case expr.operator.type
       when TokenType::MINUS; return -right.as(Float64)
-      when TokenType::BANG ; return is_truthy?(right)
+      when TokenType::BANG ; return !is_truthy?(right)
       end
 
       nil
     end
 
     def check_number_operand(operator : Token, operand : LiteralType)
-      return if operand.class == Float64
-      raise(RuntimeException.new(operator, "Operand must be a number."))
+      return if operand.is_a?(Float64)
+      log_runtime_error(operator, "Operand must be a number.")
     end
 
     def check_number_operands(operator : Token, left : LiteralType, right : LiteralType)
-      return if left.class == Float64 && right.class == Float64
-      raise(RuntimeException.new(operator, "Operands mus be numbers."))
+      return if left.is_a?(Float64) && right.is_a?(Float64)
+      log_runtime_error(operator, "Operands must be numbers.")
     end
 
     def is_truthy?(literal : LiteralType) : Bool
-      return literal.as(Bool) if literal.class == Bool
+      return literal.as(Bool) if literal.is_a?(Bool)
       return !(literal == nil)
     end
 
@@ -101,14 +115,10 @@ module CrLox
     def evaluate(expr : Expr) : LiteralType
       expr.accept(self)
     end
-  end
 
-  class RuntimeException < Exception
-    @token : Token
-
-    def initialize(token : Token, message : String)
-      super(message)
-      @token = token
+    def log_runtime_error(operator : Token, message : String)
+      @had_error = true
+      raise(RuntimeException.new(operator, message))
     end
   end
 end
