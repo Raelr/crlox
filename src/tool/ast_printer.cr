@@ -4,6 +4,8 @@ require "../token/*"
 module CrLox
   extend CrLox
 
+  PRINTER = AstPrinter.new
+
   class AstPrinter < Visitor(String)
     include CrLox
 
@@ -33,7 +35,6 @@ module CrLox
   end
 
   def get_expanded_expression(expression : Expr) : String
-    printer = AstPrinter.new
-    expression.accept(printer)
+    expression.accept(PRINTER)
   end
 end

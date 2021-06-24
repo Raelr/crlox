@@ -51,14 +51,14 @@ module CrLox
       when ':' ; add_token(TokenType::COLON)
       when '?' ; add_token(TokenType::QUESTION)
       when '\n'; @line += 1
+      when '!' ; add_token(match?('=') ? TokenType::BANG_EQUAL : TokenType::BANG)
+      when '=' ; add_token(match?('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL)
+      when '<' ; add_token(match?('=') ? TokenType::LESS_EQUAL : TokenType::LESS)
+      when '>' ; add_token(match?('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER)
+      when '/' ; parse_slash
+      when '"' ; parse_string
       when ' ', '\r', '\t'
-      when '!'; add_token(match?('=') ? TokenType::BANG_EQUAL : TokenType::BANG)
-      when '='; add_token(match?('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL)
-      when '<'; add_token(match?('=') ? TokenType::LESS_EQUAL : TokenType::LESS)
-      when '>'; add_token(match?('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER)
-      when '/'; parse_slash
-      when '"'; parse_string
-      else      parse_digit_or_alpha_chars current_char
+      else parse_digit_or_alpha_chars current_char
       end
     end
 
@@ -122,8 +122,9 @@ module CrLox
         if match?('/') && match?('*')
           parse_comment_block
         end
-        @line += 1 if peek == '\n'
+        increment_newline_if_end
       end
+      increment_newline_if_end
     end
 
     def end_of_comment? : Bool
@@ -132,7 +133,7 @@ module CrLox
 
     def parse_string
       while peek != '"' && !at_end?
-        @line += 1 if peek == '\n'
+        increment_newline_if_end
         advance
       end
       if at_end?
@@ -174,6 +175,10 @@ module CrLox
     def log_error(message : String)
       @errors.push error(@line, message)
       @had_error = true
+    end
+
+    def increment_newline_if_end
+      @line += 1 if peek == '\n'
     end
 
     def had_error

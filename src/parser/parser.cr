@@ -22,72 +22,66 @@ module CrLox
 
     def expression : Expr
       expr = equality
+
       while match?([TokenType::COMMA])
         expr = equality
       end
+
       if match?([TokenType::QUESTION])
-        operator = previous
-        next_expr = expression
-        consume(TokenType::COLON, "Expected : for ternary operator")
-        return Binary.new(expr, operator, Binary.new(next_expr, previous, expression))
+        expr = ternary_operator(expr)
       end
       expr
     end
 
     def equality : Expr
-      expr = comparison
-      while match?([TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL])
-        operator = previous
-        right = comparison
-        expr = Binary.new(expr, operator, right)
-      end
-      return expr
+      get_expression([
+        TokenType::BANG_EQUAL,
+        TokenType::EQUAL_EQUAL,
+      ], ->{ comparison })
+    end
+
+    def ternary_operator(expr : Expr) : Expr
+      operator = previous
+      next_expr = expression()
+      consume(TokenType::COLON, "Expected : for ternary operator: [EXPRESSION] ? [VALUE] : [VALUE]")
+      Binary.new(expr, operator, Binary.new(next_expr, previous, expression))
     end
 
     def comparison : Expr
-      expr = term
-      while match?([TokenType::GREATER, TokenType::GREATER_EQUAL, TokenType::LESS, TokenType::LESS_EQUAL])
-        operator = previous
-        right = term
-        expr = Binary.new(expr, operator, right)
-      end
-      return expr
+      get_expression([
+        TokenType::GREATER,
+        TokenType::GREATER_EQUAL,
+        TokenType::LESS,
+        TokenType::LESS_EQUAL,
+      ], ->{ term })
     end
 
     def term : Expr
-      expr = factor
-      while match?([TokenType::MINUS, TokenType::PLUS])
-        operator = previous
-        right = factor
-        expr = Binary.new(expr, operator, right)
-      end
-      return expr
+      get_expression([
+        TokenType::MINUS,
+        TokenType::PLUS,
+      ], ->{ factor })
     end
 
     def factor : Expr
-      expr = unary
-      while match?([TokenType::SLASH, TokenType::STAR])
-        operator = previous
-        right = unary
-        expr = Binary.new(expr, operator, right)
-      end
-      return expr
+      get_expression([
+        TokenType::SLASH,
+        TokenType::STAR,
+      ], ->{ unary })
     end
 
     def unary : Expr
       if match?([TokenType::BANG, TokenType::MINUS])
-        operator = previous
-        right = unary()
-        return Unary.new(operator, right)
+        # Create binary expression with the given operator (previous),
+        # and a unary operator
+        return Unary.new(previous, unary())
       end
       return primary
     end
 
     def primary : Expr
-      return Literal.new(true) if match?([TokenType::TRUE])
-      return Literal.new(false) if match?([TokenType::FALSE])
-      return Literal.new(nil) if match?([TokenType::NIL])
-      return Literal.new(previous.literal) if match?([TokenType::NUMBER, TokenType::STRING])
+      literal = get_literal
+      return literal if literal
       if match?([TokenType::LEFT_PAREN])
         expr = expression()
         consume(TokenType::RIGHT_PAREN, "Expected ')' after expression")
@@ -96,14 +90,32 @@ module CrLox
       raise error(peek, "Expected expression.")
     end
 
+    def get_literal : Literal | Nil
+      match?([TokenType::TRUE]) ? Literal.new(true) 
+      : match?([TokenType::FALSE]) ? Literal.new(false) 
+      : match?([TokenType::NIL]) ? Literal.new(nil) 
+      : match?([TokenType::NUMBER, TokenType::STRING]) ? Literal.new(previous.literal) 
+      : nil
+    end
+
+    def get_expression(types : Array(TokenType), get_expr : Proc(Expr))
+      expr = get_expr.call
+      while match?(types)
+        # Create a Binary expression with the current expression,
+        # the previous token, and the next expression.
+        expr = Binary.new(expr, previous, get_expr.call)
+      end
+      expr
+    end
+
     def match?(types : Array(TokenType)) : Bool
       types.each do |type|
         if check?(type)
-          advance()
+          advance
           return true
         end
       end
-      return false
+      false
     end
 
     def consume(type : TokenType, message : String) : Token
@@ -153,7 +165,7 @@ module CrLox
       end
     end
   end
-
+  
   class ParseException < Exception
   end
 end
