@@ -3,7 +3,7 @@ require "../parser/parser"
 require "../scanner/scanner"
 require "../scanner/scanner_error"
 require "../interpreter/*"
-require "../tool/expr"
+require "../ast/expr"
 require "../tool/ast_printer"
 
 module CrLox::Helper

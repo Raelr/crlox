@@ -1,4 +1,4 @@
-require "./expr"
+require "../ast/expr"
 require "../token/*"
 
 module CrLox

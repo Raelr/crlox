@@ -1,4 +1,4 @@
-require "../tool/expr"
+require "../ast/*"
 require "../token/*"
 require "../helper/error_helper"
 require "./interpreter_errors.cr"

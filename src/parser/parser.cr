@@ -1,5 +1,5 @@
 require "../token/*"
-require "../tool/expr"
+require "../ast/expr"
 require "../helper/error_helper"
 
 module CrLox
@@ -91,11 +91,7 @@ module CrLox
     end
 
     def get_literal : Literal | Nil
-      match?([TokenType::TRUE]) ? Literal.new(true) 
-      : match?([TokenType::FALSE]) ? Literal.new(false) 
-      : match?([TokenType::NIL]) ? Literal.new(nil) 
-      : match?([TokenType::NUMBER, TokenType::STRING]) ? Literal.new(previous.literal) 
-      : nil
+      match?([TokenType::TRUE]) ? Literal.new(true) : match?([TokenType::FALSE]) ? Literal.new(false) : match?([TokenType::NIL]) ? Literal.new(nil) : match?([TokenType::NUMBER, TokenType::STRING]) ? Literal.new(previous.literal) : nil
     end
 
     def get_expression(types : Array(TokenType), get_expr : Proc(Expr))
@@ -165,7 +161,7 @@ module CrLox
       end
     end
   end
-  
+
   class ParseException < Exception
   end
 end
