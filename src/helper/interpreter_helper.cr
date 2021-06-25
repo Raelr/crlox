@@ -10,19 +10,16 @@ module CrLox::Helper
     object.to_s
   end
 
-  def format_number(number : Float64)
+  def format_number(number : Float64) : Int32 | Float64
     number.to_i == number ? number.to_i : number
   end
 
   def equal?(left : LiteralType, right : LiteralType) : Bool
-    return true if left == nil && right == nil
-    return false if left == nil
     left == right
   end
 
   def truthy?(literal : LiteralType) : Bool
-    return literal.as(Bool) if literal.is_a?(Bool)
-    return !(literal == nil)
+    !!literal
   end
 
   def verify_number_operand(operator : Token, operand : LiteralType)

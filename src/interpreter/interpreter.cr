@@ -63,7 +63,6 @@ module CrLox
         end
         log_runtime_error(expr.operator, "Operands must be two numbers or two strings.")
       end
-
       nil
     end
 
