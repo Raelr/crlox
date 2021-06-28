@@ -89,7 +89,7 @@ module CrLox
     end
 
     def visit_var_stmt(stmt : Stmt)
-      value = stmt.initialiser ? evaluate(stmt.initialiser.as(Expr)) : nil
+      value = stmt.initialiser ? evaluate(stmt.initialiser.as(Expr)) : LiteralState::NONE
       @environment.define(stmt.name.lexeme, value)
       nil
     end

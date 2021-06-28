@@ -8,6 +8,11 @@ var x = 6;
 
 var a = 10;
 var b = 5;
+var c;
+
+c = 10;
+
+print c;
 
 {
   var c = 1;
