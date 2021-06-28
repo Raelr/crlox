@@ -3,6 +3,7 @@ require "../token/*"
 require "../helper/error_helper"
 require "./interpreter_errors.cr"
 require "../helper/interpreter_helper"
+require "../environment/environment"
 
 module CrLox
   extend CrLox
@@ -10,19 +11,20 @@ module CrLox
   class Interpreter < Visitor(LiteralType)
     include CrLox::Helper
 
-    def initialize(@had_error : Bool = false, @error_message : String = "")
+    def initialize(@had_error : Bool = false, @error_message : String = "", @environment = Environment.new(nil))
     end
 
-    def interpret(expression : Expr) : String
+    def interpret(statements : Array(Stmt))
       begin
-        result = evaluate(expression)
+        statements.each do |statement|
+          execute(statement)
+        end
       rescue ex : RuntimeException
         @had_error = true
         @error_message += "#{runtime_error(ex)}"
       end
 
       raise(InterpreterException.new(@error_message)) if @had_error
-      stringify(result)
     end
 
     def visit_binary_expr(expr : Binary) : LiteralType
@@ -66,6 +68,40 @@ module CrLox
       nil
     end
 
+    def execute(stmt : Stmt)
+      stmt.accept(self)
+    end
+
+    def visit_assign_expr(expr : Expr)
+      value = evaluate(expr.value)
+      @environment.assign(expr.name, value)
+      value
+    end
+
+    def visit_block_stmt(stmt : Stmt)
+      execute_block(stmt.statements, Environment.new(@environment))
+      nil
+    end
+
+    def visit_print_stmt(stmt : Stmt)
+      value = evaluate(stmt.expression)
+      puts stringify(value)
+    end
+
+    def visit_var_stmt(stmt : Stmt)
+      value = stmt.initialiser ? evaluate(stmt.initialiser.as(Expr)) : nil
+      @environment.define(stmt.name.lexeme, value)
+      nil
+    end
+
+    def visit_variable_expr(expr : Expr)
+      @environment.get(expr.name)
+    end
+
+    def visit_expression_stmt(stmt : Stmt)
+      evaluate(stmt.expression)
+    end
+
     def visit_grouping_expr(expr : Grouping) : LiteralType
       evaluate(expr.expression)
     end
@@ -85,6 +121,17 @@ module CrLox
       end
 
       nil
+    end
+
+    def execute_block(statements : Array(Stmt), environment : Environment)
+      previous = @environment
+
+      @environment = environment
+      statements.each do |statement|
+        execute(statement)
+      end
+
+      @environment = previous
     end
 
     def evaluate(expr : Expr) : LiteralType

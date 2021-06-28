@@ -1,5 +1,5 @@
 require "../token/*"
-require "../ast/expr"
+require "../ast/*"
 require "../helper/error_helper"
 
 module CrLox
@@ -9,28 +9,101 @@ module CrLox
     def initialize(tokens : Array(Token))
       @current = 0
       @tokens = tokens
+      @had_error = false
+      @error_message = "ERRORS ENCOUNTERED WHILE PARSING FILE:\n\n"
     end
 
     def initialize
       initialize(Array(Token).new)
     end
 
-    def parse_tokens(tokens : Array(Token)) : Expr
+    def parse_tokens(tokens : Array(Token)) : Array(Stmt)
       initialize(tokens)
-      expression
-    end
+      statements = Array(Stmt).new
 
-    def expression : Expr
-      expr = equality
-
-      while match?([TokenType::COMMA])
-        expr = equality
+      while !at_end?
+        decl = declaration
+        statements << decl.as(Stmt) unless decl.nil?
       end
 
+      raise(ParseException.new(@error_message)) if @had_error
+
+      statements
+    end
+
+    def declaration : Stmt | Nil
+      begin
+        return var_declaration if match?([TokenType::VAR])
+        return statement()
+      rescue ex
+        synchronise
+        @had_error = true
+        @error_message += "#{ex.message}\n"
+        return nil
+      end
+    end
+
+    def var_declaration
+      name = consume(TokenType::IDENTIFIER, "Expected variable name.")
+
+      initialiser = nil
+      initialiser = expression if match?([TokenType::EQUAL])
+
+      consume(TokenType::SEMICOLON, "Expected ';' after variable declaration")
+
+      Var.new(name, initialiser)
+    end
+
+    def assignment : Expr
+      expr : Expr = equality
+      if match?([TokenType::EQUAL])
+        equals = previous
+        value = assignment
+        if expr.is_a?(Variable)
+          name = expr.name
+          return Assign.new(name, value)
+        end
+        error(equals, "Invalid assignment target")
+      end
+      while match?([TokenType::COMMA])
+        expr = assignment
+      end
       if match?([TokenType::QUESTION])
         expr = ternary_operator(expr)
       end
       expr
+    end
+
+    def statement : Stmt
+      return print_statement if match?([TokenType::PRINT])
+      return Block.new(block) if match?([TokenType::LEFT_BRACE])
+      return expression_statement
+    end
+
+    def block : Array(Stmt)
+      statements = Array(Stmt).new
+      while !check?(TokenType::RIGHT_BRACE) && !at_end?
+        decl = declaration
+        statements.push(decl.as(Stmt)) unless decl.nil?
+      end
+      consume(TokenType::RIGHT_BRACE, "Expect '}' after block.")
+      return statements
+    end
+
+    def expression_statement : Stmt
+      expr = expression
+      consume(TokenType::SEMICOLON, "Expect ';' after value.")
+      Expression.new(expr)
+    end
+
+    def print_statement : Stmt
+      value = expression
+      consume(TokenType::SEMICOLON, "Expect ';' after value.")
+      Print.new(value)
+    end
+
+    def expression : Expr
+      expr = assignment
     end
 
     def equality : Expr
@@ -72,8 +145,6 @@ module CrLox
 
     def unary : Expr
       if match?([TokenType::BANG, TokenType::MINUS])
-        # Create binary expression with the given operator (previous),
-        # and a unary operator
         return Unary.new(previous, unary())
       end
       return primary
@@ -82,6 +153,11 @@ module CrLox
     def primary : Expr
       literal = get_literal
       return literal if literal
+
+      if match?([TokenType::IDENTIFIER])
+        return Variable.new(previous)
+      end
+
       if match?([TokenType::LEFT_PAREN])
         expr = expression()
         consume(TokenType::RIGHT_PAREN, "Expected ')' after expression")
@@ -116,7 +192,7 @@ module CrLox
 
     def consume(type : TokenType, message : String) : Token
       return advance if check?(type)
-      raise(error(peek, message))
+      raise(error(previous, message))
     end
 
     def check?(type : TokenType) : Bool

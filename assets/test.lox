@@ -1,13 +1,26 @@
-//var language = "lox";
-//var a = 1;
-//var b = 2;
-//var c = a + b;
-// This is a comment
-/*
-  This is a big *comment
-  Look how big/ it is! 
-*/
-//var isGreater = a >= b
-//var division = a / b
+var x = 6;
 
--(1 * 2) + 4 / 5)
+{
+  var a = 0;
+  var b = 5;
+  print a + 5;
+}
+
+var a = 10;
+var b = 5;
+
+{
+  var c = 1;
+  print a + b + c;
+}
+
+{
+  var d = a - b;
+  print d + (a * b) / 2;
+}
+
+{
+  var a = a + 5;
+  print a;
+}
+

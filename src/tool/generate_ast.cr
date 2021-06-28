@@ -14,15 +14,19 @@ module Tool
     output_dir = ARGV.size == 0 ? "./src/ast" : ARGV[0]
 
     ast_source = define_ast(BASE_EXPR_NAME, [
+      "Assign   : Token name, Expr value",
       "Binary		: Expr left, Token operator, Expr right",
       "Grouping	: Expr expression",
       "Literal	: LiteralType value",
       "Unary		: Token operator, Expr right",
+      "Variable : Token name",
     ])
 
     statements_source = define_ast(BASE_STMT_NAME, [
+      "Block      : Array(Stmt) statements",
       "Expression : Expr expression",
       "Print      : Expr expression",
+      "Var        : Token name, Expr? initialiser",
     ])
   rescue ex
     STDERR.puts ex.message

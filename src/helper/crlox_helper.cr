@@ -13,22 +13,15 @@ module CrLox::Helper
     File.read(path)
   end
 
-  def run(source : String) : String
+  def run(source : String)
     scanner = Scanner.new
     parser = Parser.new
     interpreter = Interpreter.new
 
     tokens = scanner.scan_tokens(source)
 
-    compiler_output = "Generated tokens:\n\n"
-    tokens.each do |token|
-      compiler_output += token.to_s + '\n'
-    end
+    statements = parser.parse_tokens(tokens)
 
-    expression = parser.parse_tokens(tokens)
-
-    compiler_output += "\nExpanded Expression:\n\n" + CrLox.get_expanded_expression(expression) + "\n\n"
-
-    compiler_output += "OUTPUT: #{interpreter.interpret(expression)}\n"
+    interpreter.interpret(statements)
   end
 end
