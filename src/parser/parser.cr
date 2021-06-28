@@ -55,7 +55,7 @@ module CrLox
     end
 
     def assignment : Expr
-      expr : Expr = equality
+      expr : Expr = or()
       if match?([TokenType::EQUAL])
         equals = previous
         value = assignment
@@ -74,10 +74,41 @@ module CrLox
       expr
     end
 
+    def or : Expr
+      expr = and()
+      while match?([TokenType::OR])
+        operator = previous
+        right = and()
+        expr = Logical.new(expr, operator, right)
+      end
+      expr
+    end
+
+    def and : Expr
+      expr = equality
+      while match?([TokenType::AND])
+        operator = previous
+        right = equality
+        expr = Logical.new(expr, operator, right)
+      end
+      expr
+    end
+
     def statement : Stmt
+      return if_statement if match?([TokenType::IF])
       return print_statement if match?([TokenType::PRINT])
       return Block.new(block) if match?([TokenType::LEFT_BRACE])
       return expression_statement
+    end
+
+    def if_statement : Stmt
+      consume(TokenType::LEFT_PAREN, "Expected '(' after 'if'.")
+      condition = expression
+      consume(TokenType::RIGHT_PAREN, "Expected ')' after if condition")
+      then_branch = statement
+      else_branch = match?([TokenType::ELSE]) ? statement : nil
+
+      If.new(condition, then_branch, else_branch)
     end
 
     def block : Array(Stmt)

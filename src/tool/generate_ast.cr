@@ -18,6 +18,7 @@ module Tool
       "Binary		: Expr left, Token operator, Expr right",
       "Grouping	: Expr expression",
       "Literal	: LiteralType value",
+      "Logical  : Expr left, Token operator, Expr right",
       "Unary		: Token operator, Expr right",
       "Variable : Token name",
     ])
@@ -25,6 +26,7 @@ module Tool
     statements_source = define_ast(BASE_STMT_NAME, [
       "Block      : Array(Stmt) statements",
       "Expression : Expr expression",
+      "If         : Expr condition, Stmt then_branch, Stmt? else_branch",
       "Print      : Expr expression",
       "Var        : Token name, Expr? initialiser",
     ])

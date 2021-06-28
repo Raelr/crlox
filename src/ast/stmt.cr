@@ -6,6 +6,8 @@ module CrLox
     end
     def visit_expression_stmt(stmt : Expression) : T
     end
+    def visit_if_stmt(stmt : If) : T
+    end
     def visit_print_stmt(stmt : Print) : T
     end
     def visit_var_stmt(stmt : Var) : T
@@ -26,6 +28,14 @@ module CrLox
     end
     def accept(visitor)
       visitor.visit_expression_stmt(self)
+    end
+  end
+  class If < Stmt
+    getter condition, then_branch, else_branch
+    def initialize(@condition : Expr, @then_branch : Stmt, @else_branch : Stmt?)
+    end
+    def accept(visitor)
+      visitor.visit_if_stmt(self)
     end
   end
   class Print < Stmt

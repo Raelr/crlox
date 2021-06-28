@@ -10,6 +10,8 @@ module CrLox
     end
     def visit_literal_expr(expr : Literal) : T
     end
+    def visit_logical_expr(expr : Logical) : T
+    end
     def visit_unary_expr(expr : Unary) : T
     end
     def visit_variable_expr(expr : Variable) : T
@@ -46,6 +48,14 @@ module CrLox
     end
     def accept(visitor)
       visitor.visit_literal_expr(self)
+    end
+  end
+  class Logical < Expr
+    getter left, operator, right
+    def initialize(@left : Expr, @operator : Token, @right : Expr)
+    end
+    def accept(visitor)
+      visitor.visit_logical_expr(self)
     end
   end
   class Unary < Expr

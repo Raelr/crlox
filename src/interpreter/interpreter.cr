@@ -72,6 +72,27 @@ module CrLox
       stmt.accept(self)
     end
 
+    def visit_logical_expr(expr : Expr)
+      left = evaluate(expr.left)
+
+      if expr.operator.type == TokenType::OR
+        return left if truthy?(left)
+      else
+        return left if !truthy?(left)
+      end
+
+      evaluate(expr.right)
+    end
+
+    def visit_if_stmt(stmt : Stmt)
+      if truthy?(evaluate(stmt.condition))
+        execute(stmt.then_branch)
+      elsif !stmt.else_branch.nil?
+        execute(stmt.else_branch.as(Stmt))
+      end
+      nil
+    end
+
     def visit_assign_expr(expr : Expr)
       value = evaluate(expr.value)
       @environment.assign(expr.name, value)
