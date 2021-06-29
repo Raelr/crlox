@@ -5,7 +5,7 @@ include CrLox
 
 def get_expressions(src : String, scanner : Scanner, parser : Parser) : Array(Stmt)
   tokens = scanner.scan_tokens(src)
-  statements = parser.parse_tokens(tokens)
+  statements = parser.parse(tokens)
 end
 
 def verify_var_has_values(statement : Var, lexeme : String, literal_value : LiteralType, type : TokenType)

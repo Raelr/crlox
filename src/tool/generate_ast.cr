@@ -25,6 +25,7 @@ module Tool
 
     statements_source = define_ast(BASE_STMT_NAME, [
       "Block      : Array(Stmt) statements",
+      "Break      : Token name",
       "Expression : Expr expression",
       "If         : Expr condition, Stmt then_branch, Stmt? else_branch",
       "Print      : Expr expression",

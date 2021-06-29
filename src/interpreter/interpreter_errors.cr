@@ -4,7 +4,7 @@ module CrLox
     @token : Token
 
     def initialize(token : Token, message : String)
-      super(message)
+      super("RuntimeException: #{message}")
       @token = token
     end
   end

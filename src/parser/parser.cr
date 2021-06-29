@@ -17,7 +17,7 @@ module CrLox
       initialize(Array(Token).new)
     end
 
-    def parse_tokens(tokens : Array(Token)) : Array(Stmt)
+    def parse(tokens : Array(Token)) : Array(Stmt)
       initialize(tokens)
       statements = Array(Stmt).new
 
@@ -46,12 +46,83 @@ module CrLox
     def var_declaration
       name = consume(TokenType::IDENTIFIER, "Expected variable name.")
 
-      initialiser = nil
-      initialiser = expression if match?([TokenType::EQUAL])
-
+      initialiser = match?([TokenType::EQUAL]) ? expression : nil
       consume(TokenType::SEMICOLON, "Expected ';' after variable declaration")
 
       Var.new(name, initialiser)
+    end
+
+    def statement : Stmt
+      return break_statement if match?([TokenType::BREAK])
+      return for_statement if match?([TokenType::FOR])
+      return if_statement if match?([TokenType::IF])
+      return print_statement if match?([TokenType::PRINT])
+      return while_statement if match?([TokenType::WHILE])
+      return Block.new(block) if match?([TokenType::LEFT_BRACE])
+      return expression_statement
+    end
+
+    def break_statement : Stmt
+      consume(TokenType::SEMICOLON, "Expected ';' after 'break'.")
+      Break.new(previous)
+    end
+
+    def for_statement : Stmt
+      consume(TokenType::LEFT_PAREN, "Expected '(' after 'for'.")
+
+      initialiser : Stmt | Nil
+      initialiser = match?([TokenType::SEMICOLON]) ? nil : match?([TokenType::VAR]) ? var_declaration : expression_statement
+
+      condition = check?(TokenType::SEMICOLON) ? nil : expression
+      condition = Literal.new(true) if condition.nil?
+
+      consume(TokenType::SEMICOLON, "Expected ';' after loop condition.")
+
+      increment = check?(TokenType::RIGHT_PAREN) ? nil : expression
+      consume(TokenType::RIGHT_PAREN, "Expected ')' after 'for' clauses")
+
+      body = statement
+      body = Block.new([body, Expression.new(increment)]) unless increment.nil?
+      body = While.new(condition.as(Expr), body)
+      body = Block.new([initialiser, body]) unless initialiser.nil?
+
+      body
+    end
+
+    def while_statement : Stmt
+      condition = get_wrapped_expr("while")
+      body = statement
+      While.new(condition, body)
+    end
+
+    def if_statement : Stmt
+      condition = get_wrapped_expr("if")
+      then_branch = statement
+      else_branch = match?([TokenType::ELSE]) ? statement : nil
+
+      If.new(condition, then_branch, else_branch)
+    end
+
+    def block : Array(Stmt)
+      statements = Array(Stmt).new
+      while !check?(TokenType::RIGHT_BRACE) && !at_end?
+        decl = declaration
+        statements.push(decl.as(Stmt)) unless decl.nil?
+      end
+      consume(TokenType::RIGHT_BRACE, "Expect '}' after block.")
+      return statements
+    end
+
+    def expression_statement : Stmt
+      expr = expression
+      consume(TokenType::SEMICOLON, "Expect ';' after value.")
+      Expression.new(expr)
+    end
+
+    def print_statement : Stmt
+      value = expression
+      consume(TokenType::SEMICOLON, "Expect ';' after value.")
+      Print.new(value)
     end
 
     def assignment : Expr
@@ -88,85 +159,18 @@ module CrLox
       expr
     end
 
-    def statement : Stmt
-      return for_statement if match?([TokenType::FOR])
-      return if_statement if match?([TokenType::IF])
-      return print_statement if match?([TokenType::PRINT])
-      return while_statement if match?([TokenType::WHILE])
-      return Block.new(block) if match?([TokenType::LEFT_BRACE])
-      return expression_statement
-    end
-
-    def for_statement : Stmt
-      consume(TokenType::LEFT_PAREN, "Expected '(' after 'for'.")
-      initialiser : Stmt | Nil
-
-      if match?([TokenType::SEMICOLON])
-        initialiser = nil
-      elsif match?([TokenType::VAR])
-        initialiser = var_declaration
-      else
-        initialiser = expression_statement
-      end
-
-      condition = nil
-      condition = expression unless check?(TokenType::SEMICOLON)
-      consume(TokenType::SEMICOLON, "Expected ';' after loop condition.")
-
-      increment = nil
-      increment = expression unless check?(TokenType::RIGHT_PAREN)
-      consume(TokenType::RIGHT_PAREN, "Expected ')' after 'for' clauses")
-      body = statement
-
-      body = Block.new([body, Expression.new(increment)]) unless increment.nil?
-
-      condition = Literal.new(true) if condition.nil?
-
-      body = While.new(condition.as(Expr), body)
-
-      body = Block.new([initialiser, body]) unless initialiser.nil?
-
-      body
-    end
-
-    def while_statement : Stmt
-      consume(TokenType::LEFT_PAREN, "Expected '(' after 'while'.")
+    def get_wrapped_expr(type : String) : Expr
+      consume(TokenType::LEFT_PAREN, "Expected '(' after '#{type}'.")
       condition = expression
-      consume(TokenType::RIGHT_PAREN, "Expected ')' after 'while' condition")
-      body = statement
-      While.new(condition, body)
+      consume(TokenType::RIGHT_PAREN, "Expected ')' after '#{type}' condition")
+      condition
     end
 
-    def if_statement : Stmt
-      consume(TokenType::LEFT_PAREN, "Expected '(' after 'if'.")
-      condition = expression
-      consume(TokenType::RIGHT_PAREN, "Expected ')' after 'if' condition")
-      then_branch = statement
-      else_branch = match?([TokenType::ELSE]) ? statement : nil
-
-      If.new(condition, then_branch, else_branch)
-    end
-
-    def block : Array(Stmt)
-      statements = Array(Stmt).new
-      while !check?(TokenType::RIGHT_BRACE) && !at_end?
-        decl = declaration
-        statements.push(decl.as(Stmt)) unless decl.nil?
-      end
-      consume(TokenType::RIGHT_BRACE, "Expect '}' after block.")
-      return statements
-    end
-
-    def expression_statement : Stmt
-      expr = expression
-      consume(TokenType::SEMICOLON, "Expect ';' after value.")
-      Expression.new(expr)
-    end
-
-    def print_statement : Stmt
-      value = expression
-      consume(TokenType::SEMICOLON, "Expect ';' after value.")
-      Print.new(value)
+    def ternary_operator(expr : Expr) : Expr
+      operator = previous
+      next_expr = expression()
+      consume(TokenType::COLON, "Expected : for ternary operator: [EXPRESSION] ? [VALUE] : [VALUE]")
+      Binary.new(expr, operator, Binary.new(next_expr, previous, expression))
     end
 
     def expression : Expr
@@ -178,13 +182,6 @@ module CrLox
         TokenType::BANG_EQUAL,
         TokenType::EQUAL_EQUAL,
       ], ->{ comparison })
-    end
-
-    def ternary_operator(expr : Expr) : Expr
-      operator = previous
-      next_expr = expression()
-      consume(TokenType::COLON, "Expected : for ternary operator: [EXPRESSION] ? [VALUE] : [VALUE]")
-      Binary.new(expr, operator, Binary.new(next_expr, previous, expression))
     end
 
     def comparison : Expr
@@ -240,21 +237,10 @@ module CrLox
     def get_expression(types : Array(TokenType), get_expr : Proc(Expr))
       expr = get_expr.call
       while match?(types)
-        # Create a Binary expression with the current expression,
-        # the previous token, and the next expression.
+        # Create a Binary expression with the current expression the previous token, and the next expression.
         expr = Binary.new(expr, previous, get_expr.call)
       end
       expr
-    end
-
-    def match?(types : Array(TokenType)) : Bool
-      types.each do |type|
-        if check?(type)
-          advance
-          return true
-        end
-      end
-      false
     end
 
     def consume(type : TokenType, message : String) : Token
@@ -267,13 +253,23 @@ module CrLox
       peek.type == type
     end
 
-    def advance : Token
-      @current += 1 unless at_end?
-      previous
+    def match?(types : Array(TokenType)) : Bool
+      types.each do |type|
+        if check?(type)
+          advance
+          return true
+        end
+      end
+      false
     end
 
     def at_end? : Bool
       peek.type == TokenType::EOF
+    end
+
+    def advance : Token
+      @current += 1 unless at_end?
+      previous
     end
 
     def peek : Token

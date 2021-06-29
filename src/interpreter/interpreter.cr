@@ -11,7 +11,13 @@ module CrLox
   class Interpreter < Visitor(LiteralType)
     include CrLox::Helper
 
-    def initialize(@had_error : Bool = false, @error_message : String = "", @environment = Environment.new(nil))
+    def initialize(
+      @had_error : Bool = false,
+      @error_message : String = "",
+      @environment = Environment.new(nil),
+      @break : Bool = false,
+      @active_loops : Int32 = 0
+    )
     end
 
     def interpret(statements : Array(Stmt))
@@ -74,29 +80,37 @@ module CrLox
 
     def visit_logical_expr(expr : Expr)
       left = evaluate(expr.left)
+      type = expr.operator.type
 
-      if expr.operator.type == TokenType::OR
-        return left if truthy?(left)
-      else
-        return left if !truthy?(left)
-      end
+      return left if (type == TokenType::OR && truthy?(left)) || !truthy?(left)
 
       evaluate(expr.right)
     end
 
+    def visit_break_stmt(stmt : Stmt)
+      log_runtime_error(stmt.name, "Cannot use 'break' outside of loop!") if @active_loops == 0
+      @break = true
+    end
+
     def visit_while_stmt(stmt : Stmt)
+      @active_loops += 1
+
       while truthy?(evaluate(stmt.condition))
+        if @break
+          @break = false
+          break
+        end
         execute(stmt.body)
       end
+
+      @active_loops -= 1
       nil
     end
 
     def visit_if_stmt(stmt : Stmt)
-      if truthy?(evaluate(stmt.condition))
-        execute(stmt.then_branch)
-      elsif !stmt.else_branch.nil?
-        execute(stmt.else_branch.as(Stmt))
-      end
+      is_true = truthy?(evaluate(stmt.condition))
+      execute(stmt.then_branch) if is_true
+      execute(stmt.else_branch.as(Stmt)) unless stmt.else_branch.nil? || is_true
       nil
     end
 
@@ -108,7 +122,6 @@ module CrLox
 
     def visit_block_stmt(stmt : Stmt)
       execute_block(stmt.statements, Environment.new(@environment))
-      nil
     end
 
     def visit_print_stmt(stmt : Stmt)
@@ -140,26 +153,25 @@ module CrLox
 
     def visit_unary_expr(expr : Unary) : LiteralType
       right = evaluate(expr.right)
+      type = expr.operator.type
 
-      case expr.operator.type
-      when TokenType::MINUS
-        verify_number_operand(expr.operator, right)
-        return -right.as(Float64)
-      when TokenType::BANG; return !truthy?(right)
-      end
+      return -right.as(Float64) if type == TokenType::MINUS && verify_number_operand(expr.operator, right).nil?
+      return !truthy?(right) if type == TokenType::BANG
 
       nil
     end
 
     def execute_block(statements : Array(Stmt), environment : Environment)
       previous = @environment
-
       @environment = environment
+
       statements.each do |statement|
+        break if @break
         execute(statement)
       end
 
       @environment = previous
+      nil
     end
 
     def evaluate(expr : Expr) : LiteralType

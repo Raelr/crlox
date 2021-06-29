@@ -20,7 +20,7 @@ module CrLox::Helper
 
     tokens = scanner.scan_tokens(source)
 
-    statements = parser.parse_tokens(tokens)
+    statements = parser.parse(tokens)
 
     interpreter.interpret(statements)
   end

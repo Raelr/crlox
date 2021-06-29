@@ -16,7 +16,9 @@ module CrLox::Helper
   def define_type(base_name : String, class_name : String, field_list : String) : String
     type_string = "#{TAB_SPACING}class #{class_name} < #{base_name.capitalize}\n"
 
-    names, fields = format_init_fn_params(field_list)
+    names, fields = {"", ""}
+
+    names, fields = format_init_fn_params(field_list) unless field_list.empty?
 
     type_string += "#{format_init_fn(names, fields)}\n" +
                    "#{format_visitor_fn(class_name, base_name)}\n" +
@@ -48,7 +50,9 @@ module CrLox::Helper
     types_string = ""
     types.each_with_index do |type, index|
       type_data = type.split(':')
-      types_string += "#{define_type(base_name, type_data[0].strip, type_data[1].strip)}\n"
+      name = type_data[0].strip
+      fields = type_data.size == 1 ? "" : type_data[1].strip
+      types_string += "#{define_type(base_name, name, fields)}\n"
     end
     types_string
   end

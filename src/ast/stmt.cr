@@ -4,6 +4,8 @@ module CrLox
   class Visitor(T)
     def visit_block_stmt(stmt : Block) : T
     end
+    def visit_break_stmt(stmt : Break) : T
+    end
     def visit_expression_stmt(stmt : Expression) : T
     end
     def visit_if_stmt(stmt : If) : T
@@ -22,6 +24,14 @@ module CrLox
     end
     def accept(visitor)
       visitor.visit_block_stmt(self)
+    end
+  end
+  class Break < Stmt
+    getter name
+    def initialize(@name : Token)
+    end
+    def accept(visitor)
+      visitor.visit_break_stmt(self)
     end
   end
   class Expression < Stmt
