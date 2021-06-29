@@ -12,6 +12,8 @@ module CrLox
     end
     def visit_var_stmt(stmt : Var) : T
     end
+    def visit_while_stmt(stmt : While) : T
+    end
   end
 
   class Block < Stmt
@@ -52,6 +54,14 @@ module CrLox
     end
     def accept(visitor)
       visitor.visit_var_stmt(self)
+    end
+  end
+  class While < Stmt
+    getter condition, body
+    def initialize(@condition : Expr, @body : Stmt)
+    end
+    def accept(visitor)
+      visitor.visit_while_stmt(self)
     end
   end
 end

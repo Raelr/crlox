@@ -65,12 +65,6 @@ module CrLox
         end
         error(equals, "Invalid assignment target")
       end
-      while match?([TokenType::COMMA])
-        expr = assignment
-      end
-      if match?([TokenType::QUESTION])
-        expr = ternary_operator(expr)
-      end
       expr
     end
 
@@ -95,16 +89,58 @@ module CrLox
     end
 
     def statement : Stmt
+      return for_statement if match?([TokenType::FOR])
       return if_statement if match?([TokenType::IF])
       return print_statement if match?([TokenType::PRINT])
+      return while_statement if match?([TokenType::WHILE])
       return Block.new(block) if match?([TokenType::LEFT_BRACE])
       return expression_statement
+    end
+
+    def for_statement : Stmt
+      consume(TokenType::LEFT_PAREN, "Expected '(' after 'for'.")
+      initialiser : Stmt | Nil
+
+      if match?([TokenType::SEMICOLON])
+        initialiser = nil
+      elsif match?([TokenType::VAR])
+        initialiser = var_declaration
+      else
+        initialiser = expression_statement
+      end
+
+      condition = nil
+      condition = expression unless check?(TokenType::SEMICOLON)
+      consume(TokenType::SEMICOLON, "Expected ';' after loop condition.")
+
+      increment = nil
+      increment = expression unless check?(TokenType::RIGHT_PAREN)
+      consume(TokenType::RIGHT_PAREN, "Expected ')' after 'for' clauses")
+      body = statement
+
+      body = Block.new([body, Expression.new(increment)]) unless increment.nil?
+
+      condition = Literal.new(true) if condition.nil?
+
+      body = While.new(condition.as(Expr), body)
+
+      body = Block.new([initialiser, body]) unless initialiser.nil?
+
+      body
+    end
+
+    def while_statement : Stmt
+      consume(TokenType::LEFT_PAREN, "Expected '(' after 'while'.")
+      condition = expression
+      consume(TokenType::RIGHT_PAREN, "Expected ')' after 'while' condition")
+      body = statement
+      While.new(condition, body)
     end
 
     def if_statement : Stmt
       consume(TokenType::LEFT_PAREN, "Expected '(' after 'if'.")
       condition = expression
-      consume(TokenType::RIGHT_PAREN, "Expected ')' after if condition")
+      consume(TokenType::RIGHT_PAREN, "Expected ')' after 'if' condition")
       then_branch = statement
       else_branch = match?([TokenType::ELSE]) ? statement : nil
 

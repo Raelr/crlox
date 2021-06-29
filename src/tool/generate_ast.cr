@@ -29,6 +29,7 @@ module Tool
       "If         : Expr condition, Stmt then_branch, Stmt? else_branch",
       "Print      : Expr expression",
       "Var        : Token name, Expr? initialiser",
+      "While      : Expr condition, Stmt body",
     ])
   rescue ex
     STDERR.puts ex.message

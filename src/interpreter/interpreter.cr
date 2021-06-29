@@ -84,6 +84,13 @@ module CrLox
       evaluate(expr.right)
     end
 
+    def visit_while_stmt(stmt : Stmt)
+      while truthy?(evaluate(stmt.condition))
+        execute(stmt.body)
+      end
+      nil
+    end
+
     def visit_if_stmt(stmt : Stmt)
       if truthy?(evaluate(stmt.condition))
         execute(stmt.then_branch)
