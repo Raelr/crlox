@@ -1,31 +1,28 @@
-var x = 6;
 
+for(var i = 0; i < 10; i = i + 1) 
 {
-  var a = 0;
-  var b = 5;
-  print a + 5;
+  print "A";
+  print i;
+
+  var blah = i - 10;
+  var c = -blah;
+  var b = 0;
+
+  print "  B";
+  while (b < 10) 
+  {
+    b = b + 1;
+    print "  " + b;
+    if (b > 5) 
+    {
+      print "  BREAK ONE";
+      break;
+    } 
+  }
+
+  if (i == 5) 
+  {
+    print "BREAK TWO";
+    break;
+  }
 }
-
-var a = 10;
-var b = 5;
-var c;
-
-c = 10;
-
-print c;
-
-{
-  var c = 1;
-  print a + b + c;
-}
-
-{
-  var d = a - b;
-  print d + (a * b) / 2;
-}
-
-{
-  var a = a + 5;
-  print a;
-}
-
